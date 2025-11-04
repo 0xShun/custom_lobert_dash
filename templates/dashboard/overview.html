@@ -5,51 +5,63 @@
 {% block page_title %}Dashboard Overview{% endblock %}
 
 {% block content %}
-<!-- Summary Cards -->
-<div class="row mb-4 g-4">
-    <div class="col-md-4">
-        <div class="content-card h-100">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <p class="text-muted mb-2 text-uppercase small fw-bold" style="letter-spacing: 1px;">Total Logs</p>
-                    <h2 class="mb-0 text-primary fw-bold display-6" id="total-logs">{{ total_logs|default:"0" }}</h2>
-                    <small class="text-success"><i class="fas fa-arrow-up me-1"></i>Processed</small>
+<!-- Summary Cards with Modern Design -->
+<div class="row g-4 mb-5">
+    <div class="col-xl-4 col-md-6">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-card-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-card-header">
+                    <span class="stat-label">TOTAL LOGS</span>
                 </div>
-                <div class="align-self-center">
-                    <i class="fas fa-file-alt fa-3x text-primary" style="opacity: 0.15;"></i>
+                <div class="stat-value" id="total-logs">{{ total_logs|default:"0" }}</div>
+                <div class="stat-footer">
+                    <span class="stat-badge stat-badge-success">
+                        <i class="fas fa-arrow-up"></i> Processed
+                    </span>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-4">
-        <div class="content-card h-100">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <p class="text-muted mb-2 text-uppercase small fw-bold" style="letter-spacing: 1px;">Anomalies</p>
-                    <h2 class="mb-0 text-danger fw-bold display-6" id="total-anomalies">{{ total_anomalies|default:"0" }}</h2>
-                    <small class="text-danger"><i class="fas fa-exclamation-circle me-1"></i>Detected</small>
+    <div class="col-xl-4 col-md-6">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-card-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-card-header">
+                    <span class="stat-label">ANOMALIES</span>
                 </div>
-                <div class="align-self-center">
-                    <i class="fas fa-exclamation-triangle fa-3x text-danger" style="opacity: 0.15;"></i>
+                <div class="stat-value" id="total-anomalies">{{ total_anomalies|default:"0" }}</div>
+                <div class="stat-footer">
+                    <span class="stat-badge stat-badge-danger">
+                        <i class="fas fa-exclamation-circle"></i> Detected
+                    </span>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-4">
-        <div class="content-card h-100">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <p class="text-muted mb-2 text-uppercase small fw-bold" style="letter-spacing: 1px;">System</p>
-                    <h2 class="mb-0 fw-bold display-6" id="system-status">
-                        <span class="status-indicator status-{{ system_status.overall }}"></span>
-                        {{ system_status.overall|title }}
-                    </h2>
-                    <small class="text-success"><i class="fas fa-check-circle me-1"></i>Operational</small>
+    <div class="col-xl-4 col-md-6">
+        <div class="stat-card stat-card-success">
+            <div class="stat-card-icon">
+                <i class="fas fa-server"></i>
+            </div>
+            <div class="stat-card-body">
+                <div class="stat-card-header">
+                    <span class="stat-label">SYSTEM</span>
                 </div>
-                <div class="align-self-center">
-                    <i class="fas fa-server fa-3x text-success" style="opacity: 0.15;"></i>
+                <div class="stat-value" id="system-status">
+                    <span class="status-indicator status-{{ system_status.overall }}"></span>
+                    {{ system_status.overall|title }}
+                </div>
+                <div class="stat-footer">
+                    <span class="stat-badge stat-badge-success">
+                        <i class="fas fa-check-circle"></i> Operational
+                    </span>
                 </div>
             </div>
         </div>
@@ -57,21 +69,38 @@
 </div>
  
 <!-- Pipeline Runner -->
-<div class="row mb-4">
+<div class="row mb-5">
     <div class="col-12">
-        <div class="content-card">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="card-title text-muted mb-1">Run Demo Pipeline</h5>
-                    <p class="mb-0 text-muted">Populate the database with sample data and run a quick performance analysis. Uses Django management commands.</p>
+        <div class="content-card pipeline-card">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="pipeline-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Run Demo Pipeline</h5>
+                            <p class="mb-0 text-muted small">Populate the database with sample data and run a quick performance analysis</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="align-self-center">
-                    <button id="run-pipeline-btn" class="btn btn-primary">Run Demo Pipeline</button>
+                <div class="align-self-start">
+                    <button id="run-pipeline-btn" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket me-2"></i>
+                        Run Demo Pipeline
+                    </button>
                 </div>
             </div>
-            <div class="mt-3">
-                <div id="pipeline-status" class="small text-muted">Status: Not started</div>
-                <pre id="pipeline-output" style="max-height:200px;overflow:auto;background:#f8f9fa;padding:8px;border-radius:4px;">No output yet</pre>
+            <div class="mt-4 pipeline-output-section">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <span class="badge bg-secondary" id="pipeline-status">
+                            <i class="fas fa-circle me-1"></i>
+                            Not started
+                        </span>
+                    </div>
+                </div>
+                <pre id="pipeline-output" class="pipeline-output">No output yet</pre>
             </div>
         </div>
     </div>
@@ -80,61 +109,65 @@
 <!-- Real-time Anomaly Feed -->
 <div class="row">
     <div class="col-12">
-        <div class="content-card">
-            <div class="card-header">
-                <h5 class="card-title">
-                    <i class="fas fa-broadcast-tower card-icon"></i>
-                    Real-time Anomaly Feed
-                </h5>
-                <div>
-                    <span class="badge bg-success" id="connection-status">
+        <div class="content-card feed-card">
+            <div class="feed-header">
+                <div class="d-flex align-items-center">
+                    <div class="feed-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold">Real-time Anomaly Feed</h5>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-success-pulse" id="connection-status">
                         <i class="fas fa-circle me-1"></i>
                         Connected
                     </span>
-                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="refreshFeed()">
-                        <i class="fas fa-sync-alt"></i>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshFeed()">
+                        <i class="fas fa-sync-alt me-1"></i>
                         Refresh
                     </button>
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover modern-table">
                     <thead>
                         <tr>
-                            <th>Timestamp</th>
-                            <th>Host/IP</th>
-                            <th>Log Message</th>
-                            <th>Anomaly Score</th>
-                            <th>Status</th>
+                            <th><i class="fas fa-clock me-2"></i>Timestamp</th>
+                            <th><i class="fas fa-server me-2"></i>Host/IP</th>
+                            <th><i class="fas fa-file-alt me-2"></i>Log Message</th>
+                            <th><i class="fas fa-chart-line me-2"></i>Anomaly Score</th>
+                            <th><i class="fas fa-flag me-2"></i>Status</th>
                         </tr>
                     </thead>
                     <tbody id="anomaly-feed">
                         {% for anomaly in recent_anomalies %}
-                        <tr>
-                            <td>{{ anomaly.log_entry.timestamp|date:"M d, H:i:s" }}</td>
+                        <tr class="anomaly-row">
+                            <td class="timestamp-cell">{{ anomaly.log_entry.timestamp|date:"n/j/Y, g:i:s A" }}</td>
                             <td>
-                                <span class="badge bg-secondary">{{ anomaly.log_entry.host_ip }}</span>
+                                <span class="host-badge">{{ anomaly.log_entry.host_ip }}</span>
                             </td>
                             <td>
-                                <div class="text-truncate" style="max-width: 300px;" title="{{ anomaly.log_entry.log_message }}">
+                                <div class="log-message" title="{{ anomaly.log_entry.log_message }}">
                                     {{ anomaly.log_entry.log_message }}
                                 </div>
                             </td>
                             <td>
-                                <span class="badge {% if anomaly.anomaly_score > 0.8 %}bg-danger{% elif anomaly.anomaly_score > 0.6 %}bg-warning{% else %}bg-info{% endif %}">
+                                <span class="score-badge score-{% if anomaly.anomaly_score > 0.8 %}high{% elif anomaly.anomaly_score > 0.6 %}medium{% else %}low{% endif %}">
                                     {{ anomaly.anomaly_score|floatformat:3 }}
                                 </span>
                             </td>
                             <td>
-                                <span class="badge bg-danger">Anomaly</span>
+                                <span class="status-badge status-anomaly">Anomaly</span>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                <i class="fas fa-inbox fa-2x mb-2"></i>
-                                <br>
-                                No anomalies detected yet
+                            <td colspan="5" class="empty-state">
+                                <div class="empty-state-content">
+                                    <i class="fas fa-inbox"></i>
+                                    <h5>No anomalies detected yet</h5>
+                                    <p class="text-muted mb-0">The system is monitoring for anomalies</p>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
