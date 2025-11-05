@@ -279,3 +279,73 @@ def system_status(request):
             },
             'last_updated': system_status_obj.last_updated.isoformat()
         }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([APIKeyAuthentication])
+@permission_classes([IsAuthenticated])
+def receive_log(request):
+    """
+    POST /api/logs/
+    
+    Receive log data from local consumer with LogBERT analysis results.
+    Request body:
+        {
+            "timestamp": "2025-11-06 02:45:15",
+            "host": "192.168.1.10",
+            "log_type": "INFO",
+            "source": "apache",
+            "message": "GET /index.html HTTP/1.1",
+            "anomaly_score": 0.234,
+            "is_anomaly": false,
+            "domain": "apache"
+        }
+    """
+    from dashboard.models import LogEntry, Anomaly
+    from django.utils.dateparse import parse_datetime
+    
+    try:
+        data = request.data
+        
+        # Parse timestamp
+        timestamp_str = data.get('timestamp')
+        if timestamp_str:
+            timestamp = parse_datetime(timestamp_str)
+            if not timestamp:
+                # Try parsing without timezone
+                from datetime import datetime
+                timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+        else:
+            from django.utils import timezone
+            timestamp = timezone.now()
+        
+        # Create log entry
+        log_entry = LogEntry.objects.create(
+            timestamp=timestamp,
+            host=data.get('host', 'unknown'),
+            log_type=data.get('log_type', 'INFO'),
+            source=data.get('source', 'unknown'),
+            raw_log=data.get('message', ''),
+            anomaly_score=float(data.get('anomaly_score', 0.0))
+        )
+        
+        # Create anomaly record if detected
+        if data.get('is_anomaly', False):
+            Anomaly.objects.create(
+                log_entry=log_entry,
+                anomaly_type='model_detected',
+                severity='HIGH' if log_entry.anomaly_score > 0.8 else 'MEDIUM',
+                description=f"Anomalous {data.get('domain', 'unknown')} log detected"
+            )
+        
+        return Response({
+            'status': 'success',
+            'log_id': log_entry.id,
+            'message': 'Log received and processed'
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)

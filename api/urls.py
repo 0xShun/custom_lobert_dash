@@ -16,6 +16,9 @@ urlpatterns = [
     path('health/', views.health_check, name='api-health'),
     path('system-status/', views.system_status, name='system-status'),
     
+    # Log ingestion endpoint
+    path('logs/', views.receive_log, name='receive-log'),
+    
     # Include router URLs
     path('', include(router.urls)),
 ]
