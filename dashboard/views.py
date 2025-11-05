@@ -149,46 +149,66 @@ def log_details(request):
 
 def api_dashboard_data(request):
     """API endpoint for dashboard real-time data - reads from actual LogEntry and Anomaly tables"""
-    from .utils import get_system_status
-    
-    # Get total logs count
-    total_logs = LogEntry.objects.count()
-    
-    # Get total anomalies count
-    total_anomalies = Anomaly.objects.count()
-    
-    # Get log type counts
-    error_count = LogEntry.objects.filter(log_type='ERROR').count()
-    warning_count = LogEntry.objects.filter(log_type='WARNING').count()
-    info_count = LogEntry.objects.filter(log_type='INFO').count()
-    debug_count = LogEntry.objects.filter(log_type='DEBUG').count()
+    try:
+        from .utils import get_system_status
+        
+        # Get total logs count
+        total_logs = LogEntry.objects.count()
+        
+        # Get total anomalies count
+        total_anomalies = Anomaly.objects.count()
+        
+        # Get log type counts
+        error_count = LogEntry.objects.filter(log_type='ERROR').count()
+        warning_count = LogEntry.objects.filter(log_type='WARNING').count()
+        info_count = LogEntry.objects.filter(log_type='INFO').count()
+        debug_count = LogEntry.objects.filter(log_type='DEBUG').count()
+    except Exception as e:
+        # Return error details for debugging
+        import traceback
+        return JsonResponse({
+            'error': str(e),
+            'traceback': traceback.format_exc(),
+            'message': 'Error fetching dashboard data'
+        }, status=500)
     
     # Get recent anomalies (most recent 50)
-    recent_anomalies = Anomaly.objects.select_related('log_entry').order_by('-detected_at')[:50]
+    try:
+        recent_anomalies = Anomaly.objects.select_related('log_entry').order_by('-detected_at')[:50]
+    except Exception as e:
+        recent_anomalies = []
     
     recent_anomalies_data = []
     for anomaly in recent_anomalies:
-        # Determine confidence level based on anomaly score
-        anomaly_score = float(anomaly.anomaly_score)
-        if anomaly_score >= 0.9:
-            confidence = 'Critical'
-        elif anomaly_score >= 0.7:
-            confidence = 'High Confidence'
-        elif anomaly_score >= 0.5:
-            confidence = 'Medium Confidence'
-        elif anomaly_score >= 0.3:
-            confidence = 'Low Confidence'
-        else:
-            confidence = 'Suspicious'
-        
-        recent_anomalies_data.append({
-            'id': anomaly.id,
-            'timestamp': anomaly.log_entry.timestamp.strftime('%m/%d/%Y, %I:%M:%S %p'),
-            'host_ip': anomaly.log_entry.host_ip,
-            'log_message': anomaly.log_entry.log_message,
-            'anomaly_score': anomaly_score,
-            'status': confidence,
-        })
+        try:
+            # Skip if log_entry is None (orphaned anomaly)
+            if not anomaly.log_entry:
+                continue
+                
+            # Determine confidence level based on anomaly score
+            anomaly_score = float(anomaly.anomaly_score)
+            if anomaly_score >= 0.9:
+                confidence = 'Critical'
+            elif anomaly_score >= 0.7:
+                confidence = 'High Confidence'
+            elif anomaly_score >= 0.5:
+                confidence = 'Medium Confidence'
+            elif anomaly_score >= 0.3:
+                confidence = 'Low Confidence'
+            else:
+                confidence = 'Suspicious'
+            
+            recent_anomalies_data.append({
+                'id': anomaly.id,
+                'timestamp': anomaly.log_entry.timestamp.strftime('%m/%d/%Y, %I:%M:%S %p'),
+                'host_ip': anomaly.log_entry.host_ip,
+                'log_message': anomaly.log_entry.log_message,
+                'anomaly_score': anomaly_score,
+                'status': confidence,
+            })
+        except Exception as e:
+            # Skip this anomaly if there's any error
+            continue
     
     # Get system status from API model (updated by local network)
     from api.models import LocalSystemStatus
