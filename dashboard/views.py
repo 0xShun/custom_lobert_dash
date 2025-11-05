@@ -148,59 +148,28 @@ def log_details(request):
 
 
 def api_dashboard_data(request):
-    """API endpoint for dashboard real-time data - reads from API models (real data)"""
-    from api.models import RawModelOutput
-    import random
+    """API endpoint for dashboard real-time data - reads from actual LogEntry and Anomaly tables"""
+    from .utils import get_system_status
     
-    # Get raw model outputs with anomalies (real individual log detections)
-    raw_outputs = RawModelOutput.objects.all().order_by('-timestamp')[:50]
+    # Get total logs count
+    total_logs = LogEntry.objects.count()
     
-    # Realistic log message templates for demonstration
-    log_templates = [
-        "Failed login attempt from IP {ip}",
-        "Database connection timeout after {time}ms",
-        "Unusual spike in API requests: {count} req/s",
-        "Memory usage critical: {percent}%",
-        "SSL certificate expires in {days} days",
-        "Disk space low on partition {partition}: {percent}% used",
-        "Network latency high: {latency}ms to {host}",
-        "Authentication service unresponsive",
-        "Backup job failed: {error}",
-        "Cache miss rate elevated: {percent}%",
-        "Suspicious file access: {file}",
-        "Service {service} restarted unexpectedly",
-        "Rate limit exceeded for user {user}",
-        "Malformed request from {ip}: {error}",
-        "Database query slow: {query_time}ms",
-    ]
+    # Get total anomalies count
+    total_anomalies = Anomaly.objects.count()
     
-    ips = ['10.0.1.50', '192.168.1.102', '172.16.0.45', '203.0.113.30', '10.0.0.50']
+    # Get log type counts
+    error_count = LogEntry.objects.filter(log_type='ERROR').count()
+    warning_count = LogEntry.objects.filter(log_type='WARNING').count()
+    info_count = LogEntry.objects.filter(log_type='INFO').count()
+    debug_count = LogEntry.objects.filter(log_type='DEBUG').count()
     
-    # Convert raw outputs to realistic anomaly logs
+    # Get recent anomalies (most recent 50)
+    recent_anomalies = Anomaly.objects.select_related('log_entry').order_by('-detected_at')[:50]
+    
     recent_anomalies_data = []
-    for i, output in enumerate(raw_outputs[:50]):  # Process up to 50 outputs
-        # Generate realistic log message from template
-        template = random.choice(log_templates)
-        log_message = template.format(
-            ip=random.choice(ips),
-            time=random.randint(3000, 15000),
-            count=random.randint(500, 2000),
-            percent=random.randint(80, 98),
-            days=random.randint(1, 15),
-            partition='/var',
-            latency=random.randint(200, 1000),
-            host='db-primary',
-            error='Connection refused',
-            file='/etc/passwd',
-            service='authentication',
-            user='admin',
-            query_time=random.randint(5000, 30000)
-        )
-        
-        # Use confidence score as anomaly score (higher = more anomalous)
-        anomaly_score = output.confidence_score
-        
+    for anomaly in recent_anomalies:
         # Determine confidence level based on anomaly score
+        anomaly_score = float(anomaly.anomaly_score)
         if anomaly_score >= 0.9:
             confidence = 'Critical'
         elif anomaly_score >= 0.7:
@@ -213,39 +182,40 @@ def api_dashboard_data(request):
             confidence = 'Suspicious'
         
         recent_anomalies_data.append({
-            'id': output.id,
-            'timestamp': output.timestamp.strftime('%m/%d/%Y, %I:%M:%S %p'),
-            'host_ip': random.choice(ips),
-            'log_message': log_message,
-            'anomaly_score': float(anomaly_score),
+            'id': anomaly.id,
+            'timestamp': anomaly.log_entry.timestamp.strftime('%m/%d/%Y, %I:%M:%S %p'),
+            'host_ip': anomaly.log_entry.host_ip,
+            'log_message': anomaly.log_entry.log_message,
+            'anomaly_score': anomaly_score,
             'status': confidence,
         })
     
-    # Get statistics from API models
-    try:
-        latest_stat = LogStatistic.objects.latest('timestamp')
-        total_logs = latest_stat.total_logs_processed or 0
-    except LogStatistic.DoesNotExist:
-        total_logs = 0
-    
-    # Get metrics from API models
-    metrics = SystemMetric.objects.all()
-    error_count = metrics.filter(metric_type='FPR').count()  # Count FPR metrics as errors
-    warning_count = metrics.filter(metric_type='FNR').count()  # Count FNR metrics as warnings
-    
-    # Count alerts by level
-    total_anomalies = Alert.objects.filter(alert_level__in=['high', 'critical']).count()
-    
-    # Get cached system status
-    system_status = get_system_status()
+    # Get system status from API model (updated by local network)
+    from api.models import LocalSystemStatus
+    system_status_obj = LocalSystemStatus.get_latest()
+    system_status = {
+        'overall': system_status_obj.overall_status,
+        'kafka': {
+            'status': system_status_obj.kafka_status,
+            'details': system_status_obj.kafka_details
+        },
+        'zookeeper': {
+            'status': system_status_obj.zookeeper_status,
+            'details': system_status_obj.zookeeper_details
+        },
+        'consumer': {
+            'status': system_status_obj.consumer_status,
+            'details': system_status_obj.consumer_details
+        },
+    }
     
     return JsonResponse({
         'total_logs': total_logs,
         'total_anomalies': total_anomalies,
         'error_count': error_count,
         'warning_count': warning_count,
-        'info_count': 0,  # Not tracked in API models
-        'debug_count': 0,  # Not tracked in API models
+        'info_count': info_count,
+        'debug_count': debug_count,
         'recent_anomalies': recent_anomalies_data,
         'system_status': system_status,
         'timestamp': timezone.now().isoformat(),
