@@ -17,10 +17,15 @@
     <td>
         <span class="status-badge status-anomaly">Anomaly</span>
     </td>
+    <td class="text-center">
+        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="viewLogDetails({{ anomaly.log_entry_id }})" title="View Details">
+            <i class="fas fa-eye"></i>
+        </button>
+    </td>
 </tr>
 {% empty %}
 <tr>
-    <td colspan="5" class="empty-state">
+    <td colspan="6" class="empty-state">
         <div class="empty-state-content">
             <i class="fas fa-inbox"></i>
             <h5>No anomalies detected yet</h5>

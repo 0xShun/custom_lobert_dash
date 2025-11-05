@@ -52,6 +52,7 @@ def get_cached_recent_anomalies(limit=10):
         # Convert to list to cache
         anomalies = [{
             'id': anomaly.id,
+            'log_entry_id': anomaly.log_entry.id,
             'timestamp': anomaly.log_entry.timestamp,
             'host_ip': anomaly.log_entry.host_ip,
             'log_message': anomaly.log_entry.log_message[:100] + '...' if len(anomaly.log_entry.log_message) > 100 else anomaly.log_entry.log_message,
