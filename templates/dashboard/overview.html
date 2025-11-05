@@ -116,7 +116,7 @@
                         <tr class="anomaly-row">
                             <td class="timestamp-cell">{{ anomaly.timestamp|date:"n/j/Y, g:i:s A" }}</td>
                             <td>
-                                <span class="host-badge">{{ anomaly.host_ip }}</span>
+                                <span class="host-badge clickable-ip" onclick="copyToClipboard('{{ anomaly.host_ip }}', event)" title="Click to copy">{{ anomaly.host_ip }}</span>
                             </td>
                             <td>
                                 <div class="log-message" title="{{ anomaly.log_message }}">
@@ -219,7 +219,111 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+/* Clickable IP styling */
+.clickable-ip {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clickable-ip:hover {
+    transform: scale(1.05);
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+/* Toast notification */
+.copy-toast {
+    position: fixed;
+    background-color: #198754;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
+    pointer-events: none;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+</style>
 <script>
+// Copy IP to clipboard function
+function copyToClipboard(text, event) {
+    // Use modern clipboard API
+    navigator.clipboard.writeText(text).then(() => {
+        // Get click position
+        const rect = event.target.getBoundingClientRect();
+        const x = rect.left + (rect.width / 2);
+        const y = rect.top;
+        
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.innerHTML = '<i class="fas fa-check-circle"></i> Copied to clipboard!';
+        toast.style.left = `${x}px`;
+        toast.style.top = `${y - 50}px`;
+        toast.style.transform = 'translateX(-50%)';
+        
+        document.body.appendChild(toast);
+        
+        // Remove toast after animation
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            // Show success message
+            const toast = document.createElement('div');
+            toast.className = 'copy-toast';
+            toast.innerHTML = '<i class="fas fa-check-circle"></i> Copied to clipboard!';
+            const rect = event.target.getBoundingClientRect();
+            toast.style.left = `${rect.left + (rect.width / 2)}px`;
+            toast.style.top = `${rect.top - 50}px`;
+            toast.style.transform = 'translateX(-50%)';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+        }
+        document.body.removeChild(textArea);
+    });
+}
+
 // Real-time updates
 let updateInterval;
 let previousAnomalyCount = 0;
