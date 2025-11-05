@@ -221,23 +221,37 @@ function updateDashboard() {
         });
 }
 
+// Track previous anomaly IDs to detect new ones
+let previousAnomalyIds = new Set();
+
 function updateAnomalyFeed(anomalies) {
     const tbody = document.getElementById('anomaly-feed');
     
     if (anomalies.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center text-muted">
-                    <i class="fas fa-inbox fa-2x mb-2"></i>
-                    <br>
-                    No anomalies detected yet
+                <td colspan="5" class="empty-state">
+                    <div class="empty-state-content">
+                        <i class="fas fa-inbox"></i>
+                        <h5>No anomalies detected yet</h5>
+                        <p class="text-muted mb-0">The system is monitoring for anomalies</p>
+                    </div>
                 </td>
             </tr>
         `;
         return;
     }
     
+    // Get current anomaly IDs
+    const currentAnomalyIds = new Set(anomalies.map(a => a.id || a.timestamp));
+    
+    // Find new anomalies
+    const newAnomalyIds = [...currentAnomalyIds].filter(id => !previousAnomalyIds.has(id));
+    
     tbody.innerHTML = anomalies.map(anomaly => {
+        const isNew = newAnomalyIds.includes(anomaly.id || anomaly.timestamp);
+        const newClass = isNew ? 'anomaly-row-new' : '';
+        
         // Determine badge color based on confidence level
         let statusBadge = 'bg-secondary';
         if (anomaly.status === 'Critical') {
@@ -253,42 +267,52 @@ function updateAnomalyFeed(anomalies) {
         }
         
         return `
-            <tr>
-                <td>${anomaly.timestamp}</td>
-                <td><span class="badge bg-secondary">${anomaly.host_ip}</span></td>
+            <tr class="anomaly-row ${newClass}">
+                <td class="timestamp-cell">${anomaly.timestamp}</td>
+                <td><span class="host-badge">${anomaly.host_ip}</span></td>
                 <td>
-                    <div class="text-truncate" style="max-width: 300px;" title="${anomaly.log_message}">
+                    <div class="log-message" title="${anomaly.log_message}">
                         ${anomaly.log_message}
                     </div>
                 </td>
                 <td>
-                    <span class="badge ${anomaly.anomaly_score > 0.8 ? 'bg-danger' : anomaly.anomaly_score > 0.6 ? 'bg-warning' : 'bg-info'}">
+                    <span class="score-badge score-${anomaly.anomaly_score > 0.8 ? 'high' : anomaly.anomaly_score > 0.6 ? 'medium' : 'low'}">
                         ${parseFloat(anomaly.anomaly_score).toFixed(3)}
                     </span>
                 </td>
-                <td><span class="badge ${statusBadge}">${anomaly.status}</span></td>
+                <td><span class="status-badge status-anomaly">${anomaly.status || 'Anomaly'}</span></td>
             </tr>
         `;
     }).join('');
+    
+    // Update tracking set
+    previousAnomalyIds = currentAnomalyIds;
+    
+    // Remove highlight animation after 2 seconds
+    if (newAnomalyIds.length > 0) {
+        setTimeout(() => {
+            document.querySelectorAll('.anomaly-row-new').forEach(row => {
+                row.classList.remove('anomaly-row-new');
+            });
+        }, 2000);
+    }
 }
 
 function refreshFeed() {
     updateDashboard();
 }
 
-// Load dashboard data on page load and set up auto-refresh based on user preferences
+// Load dashboard data on page load and set up auto-refresh (2-second interval for anomaly feed)
 document.addEventListener('DOMContentLoaded', function() {
     updateDashboard();
     
-    // Apply user's refresh interval preference
-    const refreshInterval = {{ user_preferences.refresh_interval|default:0 }};
-    if (refreshInterval > 0) {
-        // Auto-refresh enabled based on user preferences
-        updateInterval = setInterval(updateDashboard, refreshInterval * 1000);
-        console.log(`Dashboard auto-refresh enabled: every ${refreshInterval} seconds`);
-    } else {
-        console.log('Dashboard auto-refresh disabled by user preference');
-    }
+    // Auto-refresh anomaly feed every 2 seconds (lightweight, only fetches new data)
+    updateInterval = setInterval(updateDashboard, 2000);
+    console.log('Anomaly feed auto-refresh enabled: every 2 seconds');
+    
+    // Update connection status
+    document.getElementById('connection-status').className = 'badge badge-success-pulse';
+    document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-1"></i>Connected';
 });
 
 // Cleanup on page unload

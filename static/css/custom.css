@@ -1564,3 +1564,33 @@ canvas {
     font-weight: 600;
 }
 
+
+/* Auto-refresh anomaly highlight animation */
+.anomaly-row-new {
+    animation: highlightFade 2s ease-out;
+    background-color: #fff3cd !important;
+}
+
+@keyframes highlightFade {
+    0% {
+        background-color: #ffc107;
+        transform: scale(1.02);
+    }
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+}
+
+.badge-success-pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
