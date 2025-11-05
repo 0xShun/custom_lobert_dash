@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -95,6 +99,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'authentication.context_processors.user_preferences',
             ],
         },
     },
@@ -291,3 +296,8 @@ CORS_ALLOW_CREDENTIALS = True
 # WARNING: Never use in production!
 if os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True':
     CORS_ALLOW_ALL_ORIGINS = True
+
+# Kafka Configuration
+KAFKA_BROKER_URL = os.environ.get('KAFKA_BROKER_URL', 'localhost:9092')
+KAFKA_TOPIC_LOGS = os.environ.get('KAFKA_TOPIC_LOGS', 'log_topic')
+KAFKA_TOPIC_ANOMALIES = os.environ.get('KAFKA_TOPIC_ANOMALIES', 'anomalies')

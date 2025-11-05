@@ -99,39 +99,65 @@
             <div class="row g-4">
                 <div class="col-lg-4">
                     <div class="health-metric">
-                        <div class="health-icon bg-success-subtle">
+                        <div class="health-icon {{ health_metrics.database.badge }}-subtle">
+                            {% if health_metrics.database.badge == 'bg-success' %}
                             <i class="fas fa-database text-success"></i>
+                            {% elif health_metrics.database.badge == 'bg-warning' %}
+                            <i class="fas fa-database text-warning"></i>
+                            {% elif health_metrics.database.badge == 'bg-danger' %}
+                            <i class="fas fa-database text-danger"></i>
+                            {% else %}
+                            <i class="fas fa-database text-secondary"></i>
+                            {% endif %}
                         </div>
                         <div class="health-info">
                             <h6>Database</h6>
-                            <span class="badge bg-success">Healthy</span>
-                            <small class="text-muted d-block">Connection pool: 85%</small>
+                            <span class="badge {{ health_metrics.database.badge }}">{{ health_metrics.database.status }}</span>
+                            <small class="text-muted d-block">{{ health_metrics.database.detail }}</small>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-4">
                     <div class="health-metric">
-                        <div class="health-icon bg-info-subtle">
+                        <div class="health-icon {{ health_metrics.memory.badge }}-subtle">
+                            {% if health_metrics.memory.badge == 'bg-info' %}
                             <i class="fas fa-memory text-info"></i>
+                            {% elif health_metrics.memory.badge == 'bg-success' %}
+                            <i class="fas fa-memory text-success"></i>
+                            {% elif health_metrics.memory.badge == 'bg-warning' %}
+                            <i class="fas fa-memory text-warning"></i>
+                            {% elif health_metrics.memory.badge == 'bg-danger' %}
+                            <i class="fas fa-memory text-danger"></i>
+                            {% else %}
+                            <i class="fas fa-memory text-secondary"></i>
+                            {% endif %}
                         </div>
                         <div class="health-info">
                             <h6>Memory Usage</h6>
-                            <span class="badge bg-info">Normal</span>
-                            <small class="text-muted d-block">Usage: 67%</small>
+                            <span class="badge {{ health_metrics.memory.badge }}">{{ health_metrics.memory.status }}</span>
+                            <small class="text-muted d-block">{{ health_metrics.memory.percent }}% ({{ health_metrics.memory.used_gb }}/{{ health_metrics.memory.total_gb }} GB)</small>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-4">
                     <div class="health-metric">
-                        <div class="health-icon bg-warning-subtle">
+                        <div class="health-icon {{ health_metrics.disk.badge }}-subtle">
+                            {% if health_metrics.disk.badge == 'bg-success' %}
+                            <i class="fas fa-hdd text-success"></i>
+                            {% elif health_metrics.disk.badge == 'bg-warning' %}
                             <i class="fas fa-hdd text-warning"></i>
+                            {% elif health_metrics.disk.badge == 'bg-danger' %}
+                            <i class="fas fa-hdd text-danger"></i>
+                            {% else %}
+                            <i class="fas fa-hdd text-secondary"></i>
+                            {% endif %}
                         </div>
                         <div class="health-info">
                             <h6>Disk Space</h6>
-                            <span class="badge bg-warning">Warning</span>
-                            <small class="text-muted d-block">Usage: 78%</small>
+                            <span class="badge {{ health_metrics.disk.badge }}">{{ health_metrics.disk.status }}</span>
+                            <small class="text-muted d-block">{{ health_metrics.disk.percent }}% ({{ health_metrics.disk.used_gb }}/{{ health_metrics.disk.total_gb }} GB)</small>
                         </div>
                     </div>
                 </div>
@@ -151,49 +177,18 @@
                 </h5>
             </div>
             <div class="activity-feed">
+                {% for act in recent_activity %}
                 <div class="activity-item">
-                    <div class="activity-icon bg-success-subtle">
-                        <i class="fas fa-check text-success"></i>
+                    <div class="activity-icon bg-{{ act.icon_color }}-subtle">
+                        <i class="fas fa-{{ act.icon }} text-{{ act.icon_color }}"></i>
                     </div>
                     <div class="activity-content">
-                        <h6>System backup completed</h6>
-                        <p class="text-muted mb-1">Incremental backup finished successfully</p>
-                        <small class="text-muted">2 minutes ago</small>
+                        <h6>{{ act.title }}</h6>
+                        <p class="text-muted mb-1">{{ act.description }}</p>
+                        <small class="text-muted">{{ act.time }}</small>
                     </div>
                 </div>
-                
-                <div class="activity-item">
-                    <div class="activity-icon bg-info-subtle">
-                        <i class="fas fa-sync text-info"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h6>Log rotation completed</h6>
-                        <p class="text-muted mb-1">Old log files archived and compressed</p>
-                        <small class="text-muted">15 minutes ago</small>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-icon bg-warning-subtle">
-                        <i class="fas fa-exclamation-triangle text-warning"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h6>High CPU usage detected</h6>
-                        <p class="text-muted mb-1">CPU usage spiked to 85% for 5 minutes</p>
-                        <small class="text-muted">1 hour ago</small>
-                    </div>
-                </div>
-                
-                <div class="activity-item">
-                    <div class="activity-icon bg-success-subtle">
-                        <i class="fas fa-shield-alt text-success"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h6>Security scan completed</h6>
-                        <p class="text-muted mb-1">No vulnerabilities found in system</p>
-                        <small class="text-muted">2 hours ago</small>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>

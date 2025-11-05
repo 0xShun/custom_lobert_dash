@@ -134,41 +134,23 @@
                     <div class="anomaly-stats">
                         <h6 class="mb-3">Anomaly Score Distribution</h6>
                         <div class="score-bars">
+                            {% for score_range in score_distribution %}
                             <div class="score-bar">
-                                <div class="score-label">0.5 - 0.6</div>
+                                <div class="score-label">{{ score_range.label }}</div>
                                 <div class="score-progress">
-                                    <div class="progress-bar bg-success" style="width: 15%"></div>
+                                    {% if score_range.min >= 0.8 %}
+                                    <div class="progress-bar bg-danger" style="width: {{ score_range.percentage }}%"></div>
+                                    {% elif score_range.min >= 0.7 %}
+                                    <div class="progress-bar bg-warning" style="width: {{ score_range.percentage }}%"></div>
+                                    {% else %}
+                                    <div class="progress-bar bg-success" style="width: {{ score_range.percentage }}%"></div>
+                                    {% endif %}
                                 </div>
-                                <div class="score-count">15</div>
+                                <div class="score-count">{{ score_range.count }}</div>
                             </div>
-                            <div class="score-bar">
-                                <div class="score-label">0.6 - 0.7</div>
-                                <div class="score-progress">
-                                    <div class="progress-bar bg-warning" style="width: 25%"></div>
-                                </div>
-                                <div class="score-count">25</div>
-                            </div>
-                            <div class="score-bar">
-                                <div class="score-label">0.7 - 0.8</div>
-                                <div class="score-progress">
-                                    <div class="progress-bar bg-danger" style="width: 35%"></div>
-                                </div>
-                                <div class="score-count">35</div>
-                            </div>
-                            <div class="score-bar">
-                                <div class="score-label">0.8 - 0.9</div>
-                                <div class="score-progress">
-                                    <div class="progress-bar bg-danger" style="width: 20%"></div>
-                                </div>
-                                <div class="score-count">20</div>
-                            </div>
-                            <div class="score-bar">
-                                <div class="score-label">0.9 - 1.0</div>
-                                <div class="score-progress">
-                                    <div class="progress-bar bg-danger" style="width: 5%"></div>
-                                </div>
-                                <div class="score-count">5</div>
-                            </div>
+                            {% empty %}
+                            <p class="text-muted text-center">No anomaly data available</p>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -177,44 +159,38 @@
                     <div class="anomaly-trends">
                         <h6 class="mb-3">Top Anomaly Sources</h6>
                         <div class="trend-list">
+                            {% for source in top_sources %}
                             <div class="trend-item">
+                                {% if source.percentage >= 70 %}
                                 <div class="trend-icon bg-danger-subtle">
                                     <i class="fas fa-server text-danger"></i>
                                 </div>
-                                <div class="trend-info">
-                                    <h6>web_server</h6>
-                                    <p class="text-muted mb-1">45 anomalies detected</p>
-                                    <div class="progress" style="height: 4px;">
-                                        <div class="progress-bar bg-danger" style="width: 75%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="trend-item">
+                                {% elif source.percentage >= 40 %}
                                 <div class="trend-icon bg-warning-subtle">
-                                    <i class="fas fa-database text-warning"></i>
+                                    <i class="fas fa-server text-warning"></i>
                                 </div>
-                                <div class="trend-info">
-                                    <h6>database</h6>
-                                    <p class="text-muted mb-1">32 anomalies detected</p>
-                                    <div class="progress" style="height: 4px;">
-                                        <div class="progress-bar bg-warning" style="width: 55%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="trend-item">
+                                {% else %}
                                 <div class="trend-icon bg-info-subtle">
-                                    <i class="fas fa-shield-alt text-info"></i>
+                                    <i class="fas fa-server text-info"></i>
                                 </div>
+                                {% endif %}
                                 <div class="trend-info">
-                                    <h6>firewall</h6>
-                                    <p class="text-muted mb-1">18 anomalies detected</p>
+                                    <h6>{{ source.host_ip }} ({{ source.log_type }})</h6>
+                                    <p class="text-muted mb-1">{{ source.anomaly_count }} anomalies detected</p>
                                     <div class="progress" style="height: 4px;">
-                                        <div class="progress-bar bg-info" style="width: 30%"></div>
+                                        {% if source.percentage >= 70 %}
+                                        <div class="progress-bar bg-danger" style="width: {{ source.percentage }}%"></div>
+                                        {% elif source.percentage >= 40 %}
+                                        <div class="progress-bar bg-warning" style="width: {{ source.percentage }}%"></div>
+                                        {% else %}
+                                        <div class="progress-bar bg-info" style="width: {{ source.percentage }}%"></div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
+                            {% empty %}
+                            <p class="text-muted text-center">No anomaly sources available</p>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -223,32 +199,6 @@
     </div>
 </div>
 
-<!-- Streamlit Integration -->
-<div class="row">
-    <div class="col-12">
-        <div class="content-card">
-            <div class="card-header border-0 pb-3">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-stream card-icon"></i>
-                    Interactive Analytics (Streamlit)
-                </h5>
-            </div>
-            <div class="streamlit-container">
-                <div class="d-flex align-items-center justify-content-center" style="height: 300px;">
-                    <div class="text-center">
-                        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
-                        <h5>Interactive Analytics Dashboard</h5>
-                        <p class="text-muted mb-3">Access advanced analytics and visualizations through our Streamlit integration</p>
-                        <a href="http://localhost:8501" target="_blank" class="btn btn-primary-custom">
-                            <i class="fas fa-external-link-alt me-2"></i>
-                            Open Streamlit Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -396,13 +346,6 @@ function loadPieChart() {
 .trend-info h6 {
     margin-bottom: 0.25rem;
     font-weight: 600;
-}
-
-.streamlit-container {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    padding: 2rem;
 }
 
 /* Responsive Design */

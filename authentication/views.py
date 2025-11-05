@@ -40,6 +40,84 @@ def logout_view(request):
 
 
 @login_required
+def settings_view(request):
+    """Main settings page view"""
+    from .models import UserPreferences
+    
+    # Create preferences if they don't exist
+    preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+    
+    context = {
+        'preferences': preferences
+    }
+    return render(request, 'authentication/settings.html', context)
+
+
+@login_required
+def update_profile(request):
+    """Update user profile information"""
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        request.user.first_name = first_name
+        request.user.last_name = last_name
+        request.user.email = email
+        request.user.save()
+        
+        messages.success(request, 'Profile updated successfully.')
+    
+    return redirect('authentication:settings')
+
+
+@login_required
+def update_preferences(request):
+    """Update user preferences"""
+    from .models import UserPreferences
+    
+    if request.method == 'POST':
+        preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+        
+        # Display Settings
+        preferences.dark_mode = request.POST.get('dark_mode') == 'on'
+        preferences.compact_view = request.POST.get('compact_view') == 'on'
+        
+        # Data Settings
+        preferences.refresh_interval = int(request.POST.get('refresh_interval', 10))
+        preferences.items_per_page = int(request.POST.get('items_per_page', 25))
+        preferences.timezone = request.POST.get('timezone', 'UTC')
+        
+        preferences.save()
+        messages.success(request, 'Preferences updated successfully.')
+    
+    return redirect('authentication:settings')
+
+
+@login_required
+def update_notifications(request):
+    """Update notification preferences"""
+    from .models import UserPreferences
+    
+    if request.method == 'POST':
+        preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+        
+        # Email Notifications
+        preferences.email_anomalies = request.POST.get('email_anomalies') == 'on'
+        preferences.email_critical = request.POST.get('email_critical') == 'on'
+        preferences.email_reports = request.POST.get('email_reports') == 'on'
+        preferences.email_updates = request.POST.get('email_updates') == 'on'
+        
+        # Browser Notifications
+        preferences.browser_notifications = request.POST.get('browser_notifications') == 'on'
+        
+        preferences.save()
+        messages.success(request, 'Notification settings updated successfully.')
+    
+    return redirect('authentication:settings')
+
+
+@login_required
 def change_password(request):
     """Change password view"""
     if request.method == 'POST':
@@ -49,15 +127,15 @@ def change_password(request):
         
         if not request.user.check_password(current_password):
             messages.error(request, 'Current password is incorrect.')
-            return render(request, 'authentication/change_password.html')
+            return redirect('authentication:settings')
         
         if new_password != confirm_password:
             messages.error(request, 'New passwords do not match.')
-            return render(request, 'authentication/change_password.html')
+            return redirect('authentication:settings')
         
         if len(new_password) < 8:
             messages.error(request, 'Password must be at least 8 characters long.')
-            return render(request, 'authentication/change_password.html')
+            return redirect('authentication:settings')
         
         request.user.set_password(new_password)
         request.user.save()
@@ -67,7 +145,7 @@ def change_password(request):
         login(request, user)
         
         messages.success(request, 'Password changed successfully.')
-        return redirect('dashboard:overview')
+        return redirect('authentication:settings')
     
     return render(request, 'authentication/change_password.html')
 

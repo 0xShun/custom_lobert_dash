@@ -9,6 +9,7 @@ urlpatterns = [
     path('logs/', views.log_details, name='log_details'),
     path('api/dashboard-data/', views.api_dashboard_data, name='api_dashboard_data'),
     path('api/anomaly-feed/', views.api_anomaly_feed, name='api_anomaly_feed'),
+    path('api/log/<int:log_id>/', views.api_log_detail, name='api_log_detail'),
     # New API endpoints for Streamlit
     path('api/streamlit/chart-data/', views.api_streamlit_chart_data, name='api_streamlit_chart_data'),
     path('api/streamlit/anomaly-data/', views.api_streamlit_anomaly_data, name='api_streamlit_anomaly_data'),
@@ -24,4 +25,7 @@ urlpatterns = [
     # Pipeline run endpoints (trigger sample data + performance analysis)
     path('run/pipeline/', views.run_pipeline, name='run_pipeline'),
     path('run/pipeline/status/', views.pipeline_status, name='pipeline_status'),
+    
+    # Help page
+    path('help/', views.help_page, name='help'),
 ] 

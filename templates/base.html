@@ -14,25 +14,68 @@
     <meta name="msapplication-TileColor" content="#8B0000">
     <meta name="theme-color" content="#8B0000">
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Bootstrap CSS -->
+    <!-- Critical CSS - Bootstrap (optimized CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom CSS -->
     <link href="{% static 'css/custom.css' %}" rel="stylesheet">
     
+    <!-- Non-critical resources - deferred for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Font Awesome - deferred -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"></noscript>
+    
+    <!-- Chart.js - loaded only when needed -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     {% block extra_css %}{% endblock %}
     
+    <style>
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #1a1a1a !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .card {
+            background-color: #2d2d2d !important;
+            border-color: #444 !important;
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .table {
+            color: #e0e0e0 !important;
+        }
+        body.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        body.dark-mode .form-control, body.dark-mode .form-select {
+            background-color: #3a3a3a !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode .btn-outline-secondary {
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        body.dark-mode .text-muted {
+            color: #aaa !important;
+        }
+        body.dark-mode .bg-light {
+            background-color: #2d2d2d !important;
+        }
+        body.dark-mode .main-content {
+            background-color: #1a1a1a !important;
+        }
+        body.dark-mode .dashboard-title {
+            color: #e0e0e0 !important;
+        }
+    </style>
 
 </head>
-<body>
+<body {% if user.is_authenticated and user.preferences.dark_mode %}class="dark-mode"{% endif %}>
     {% if user.is_authenticated %}
     <!-- Top Header -->
     <header class="top-header">
@@ -71,6 +114,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'dashboard:overview' %}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'dashboard:help' %}"><i class="fas fa-question-circle me-2"></i>Help & Guide</a></li>
                         {% if user.is_staff %}
                         <li><a class="dropdown-item" href="/admin/"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
                         {% endif %}
@@ -141,17 +185,8 @@
                         System Monitoring
                     </a>
                 </li>
-                {% if user.is_staff %}
                 <li class="nav-item">
-                    <a class="nav-link {% if 'calibration' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'dashboard:calibration_dashboard' %}">
-                        <i class="fas fa-cogs me-2"></i>
-                        Model Calibration
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'authentication:change_password' %}">
+                    <a class="nav-link" href="{% url 'authentication:settings' %}">
                         <i class="fas fa-cog me-2"></i>
                         Settings
                     </a>

@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Log Anomaly Detection Platform{% endblock %}
+
+{% block page_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3 mb-4">
+        <!-- Settings Navigation -->
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                        <i class="fas fa-user me-2"></i>
+                        Profile Information
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-lock me-2"></i>
+                        Security & Password
+                    </a>
+                    <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-cog me-2"></i>
+                        Preferences
+                    </a>
+                    <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-bell me-2"></i>
+                        Notifications
+                    </a>
+                    <a href="#api" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-key me-2"></i>
+                        API Access
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <!-- Profile Information Tab -->
+            <div class="tab-pane fade show active" id="profile">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user text-primary me-2"></i>
+                            Profile Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'authentication:update_profile' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_profile">
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="first_name" class="form-label fw-semibold">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           value="{{ user.first_name }}" placeholder="Enter first name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="last_name" class="form-label fw-semibold">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           value="{{ user.last_name }}" placeholder="Enter last name">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="email" class="form-label fw-semibold">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" placeholder="Enter email address">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="username" class="form-label fw-semibold">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="{{ user.username }}" readonly disabled>
+                                <small class="text-muted">Username cannot be changed</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Account Type</label>
+                                <div class="p-3 bg-light rounded">
+                                    <span class="badge bg-primary me-2">
+                                        {% if user.is_superuser %}
+                                            <i class="fas fa-crown me-1"></i> Administrator
+                                        {% elif user.is_staff %}
+                                            <i class="fas fa-user-shield me-1"></i> Staff
+                                        {% else %}
+                                            <i class="fas fa-user me-1"></i> User
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">
+                                        Member since {{ user.date_joined|date:"F Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & Password Tab -->
+            <div class="tab-pane fade" id="security">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lock text-danger me-2"></i>
+                            Change Password
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'authentication:change_password' %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label for="current_password" class="form-label fw-semibold">Current Password</label>
+                                <input type="password" class="form-control" id="current_password" 
+                                       name="current_password" required placeholder="Enter current password">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="new_password" class="form-label fw-semibold">New Password</label>
+                                <input type="password" class="form-control" id="new_password" 
+                                       name="new_password" required placeholder="Enter new password">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Must be at least 8 characters long
+                                </small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="confirm_password" class="form-label fw-semibold">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirm_password" 
+                                       name="confirm_password" required placeholder="Confirm new password">
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-key me-2"></i>
+                                    Change Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history text-info me-2"></i>
+                            Security Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center p-3 bg-light rounded mb-3">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-sign-in-alt fa-2x text-success"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">Last Login</h6>
+                                <small class="text-muted">
+                                    {% if user.last_login %}
+                                        {{ user.last_login|date:"F j, Y, g:i a" }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Security Tip:</strong> Always use a strong, unique password and never share your credentials.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferences Tab -->
+            <div class="tab-pane fade" id="preferences">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog text-secondary me-2"></i>
+                            User Preferences
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'authentication:update_preferences' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_preferences">
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3">Display Settings</h6>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="dark_mode" name="dark_mode" {% if preferences.dark_mode %}checked{% endif %}>
+                                    <label class="form-check-label" for="dark_mode">
+                                        <strong>Dark Mode</strong>
+                                        <br><small class="text-muted">Enable dark theme for the dashboard</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="compact_view" name="compact_view" {% if preferences.compact_view %}checked{% endif %}>
+                                    <label class="form-check-label" for="compact_view">
+                                        <strong>Compact View</strong>
+                                        <br><small class="text-muted">Show more data in less space</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3">Data Settings</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="refresh_interval" class="form-label">Dashboard Refresh Interval</label>
+                                    <select class="form-select" id="refresh_interval" name="refresh_interval">
+                                        <option value="5" {% if preferences.refresh_interval == 5 %}selected{% endif %}>5 seconds</option>
+                                        <option value="10" {% if preferences.refresh_interval == 10 %}selected{% endif %}>10 seconds</option>
+                                        <option value="30" {% if preferences.refresh_interval == 30 %}selected{% endif %}>30 seconds</option>
+                                        <option value="60" {% if preferences.refresh_interval == 60 %}selected{% endif %}>1 minute</option>
+                                        <option value="0" {% if preferences.refresh_interval == 0 %}selected{% endif %}>Manual only</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="items_per_page" class="form-label">Items Per Page</label>
+                                    <select class="form-select" id="items_per_page" name="items_per_page">
+                                        <option value="10" {% if preferences.items_per_page == 10 %}selected{% endif %}>10</option>
+                                        <option value="25" {% if preferences.items_per_page == 25 %}selected{% endif %}>25</option>
+                                        <option value="50" {% if preferences.items_per_page == 50 %}selected{% endif %}>50</option>
+                                        <option value="100" {% if preferences.items_per_page == 100 %}selected{% endif %}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3">Timezone</h6>
+                                <select class="form-select" id="timezone" name="timezone">
+                                    <option value="UTC" {% if preferences.timezone == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                                    <option value="America/New_York" {% if preferences.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (US & Canada)</option>
+                                    <option value="America/Chicago" {% if preferences.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (US & Canada)</option>
+                                    <option value="America/Denver" {% if preferences.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time (US & Canada)</option>
+                                    <option value="America/Los_Angeles" {% if preferences.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (US & Canada)</option>
+                                    <option value="Europe/London" {% if preferences.timezone == 'Europe/London' %}selected{% endif %}>London</option>
+                                    <option value="Europe/Paris" {% if preferences.timezone == 'Europe/Paris' %}selected{% endif %}>Paris</option>
+                                    <option value="Asia/Tokyo" {% if preferences.timezone == 'Asia/Tokyo' %}selected{% endif %}>Tokyo</option>
+                                    <option value="Asia/Shanghai" {% if preferences.timezone == 'Asia/Shanghai' %}selected{% endif %}>Shanghai</option>
+                                </select>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    Save Preferences
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div class="tab-pane fade" id="notifications">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell text-warning me-2"></i>
+                            Notification Preferences
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'authentication:update_notifications' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_notifications">
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3">Email Notifications</h6>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_anomalies" name="email_anomalies" {% if preferences.email_anomalies %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_anomalies">
+                                        <strong>Anomaly Alerts</strong>
+                                        <br><small class="text-muted">Receive email when new anomalies are detected</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_critical" name="email_critical" {% if preferences.email_critical %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_critical">
+                                        <strong>Critical Alerts Only</strong>
+                                        <br><small class="text-muted">Only send emails for critical severity anomalies</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_reports" name="email_reports" {% if preferences.email_reports %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_reports">
+                                        <strong>Daily Reports</strong>
+                                        <br><small class="text-muted">Receive daily summary reports</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="email_updates" name="email_updates" {% if preferences.email_updates %}checked{% endif %}>
+                                    <label class="form-check-label" for="email_updates">
+                                        <strong>System Updates</strong>
+                                        <br><small class="text-muted">Receive notifications about system maintenance and updates</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3">Browser Notifications</h6>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="browser_notifications" name="browser_notifications" {% if preferences.browser_notifications %}checked{% endif %}>
+                                    <label class="form-check-label" for="browser_notifications">
+                                        <strong>Enable Browser Notifications</strong>
+                                        <br><small class="text-muted">Show desktop notifications for real-time alerts</small>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>
+                                    Save Notification Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Access Tab -->
+            <div class="tab-pane fade" id="api">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key text-success me-2"></i>
+                            API Access Tokens
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            API tokens allow you to access the LogBERT platform programmatically. Keep your tokens secure and never share them.
+                        </p>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Administrator Access Required</strong><br>
+                            API token management is only available to administrators. Please contact your system administrator for API access.
+                        </div>
+                        
+                        {% if user.is_staff %}
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#generateTokenModal">
+                                <i class="fas fa-plus me-2"></i>
+                                Generate New Token
+                            </button>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6 class="fw-semibold mb-3">Active Tokens</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Token Name</th>
+                                            <th>Created</th>
+                                            <th>Last Used</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                                No active tokens
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group-item-action.active {
+        background: linear-gradient(135deg, #8B0000 0%, #660000 100%);
+        border-color: #8B0000;
+    }
+    .list-group-item-action:hover {
+        background-color: #f8f9fa;
+    }
+    .form-check-input:checked {
+        background-color: #8B0000;
+        border-color: #8B0000;
+    }
+    .card {
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}

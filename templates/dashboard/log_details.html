@@ -89,7 +89,7 @@
 <!-- Log Statistics -->
 <div class="row mb-5">
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="content-card stat-card stat-card-primary">
+        <div class="content-card stat-card stat-card-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Total number of log entries in the filtered results">
             <div class="d-flex align-items-center">
                 <div class="stat-icon-wrapper bg-primary-subtle">
                     <i class="fas fa-file-alt text-primary"></i>
@@ -102,7 +102,7 @@
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="content-card stat-card stat-card-danger">
+        <div class="content-card stat-card stat-card-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of logs with ERROR level severity">
             <div class="d-flex align-items-center">
                 <div class="stat-icon-wrapper bg-danger-subtle">
                     <i class="fas fa-exclamation-circle text-danger"></i>
@@ -115,7 +115,7 @@
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="content-card stat-card stat-card-warning">
+        <div class="content-card stat-card stat-card-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of logs with WARNING level severity">
             <div class="d-flex align-items-center">
                 <div class="stat-icon-wrapper bg-warning-subtle">
                     <i class="fas fa-exclamation-triangle text-warning"></i>
@@ -128,7 +128,7 @@
         </div>
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
-        <div class="content-card stat-card stat-card-info">
+        <div class="content-card stat-card stat-card-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of logs with INFO level severity">
             <div class="d-flex align-items-center">
                 <div class="stat-icon-wrapper bg-info-subtle">
                     <i class="fas fa-info-circle text-info"></i>
@@ -164,22 +164,22 @@
                 <table class="table table-hover modern-table">
                     <thead>
                         <tr>
-                            <th class="border-0 bg-light-subtle">
+                            <th class="border-0 bg-light-subtle" data-bs-toggle="tooltip" title="When the log was created">
                                 <i class="fas fa-clock me-2"></i>Timestamp
                             </th>
-                            <th class="border-0 bg-light-subtle">
+                            <th class="border-0 bg-light-subtle" data-bs-toggle="tooltip" title="Source IP address or hostname">
                                 <i class="fas fa-server me-2"></i>Host/IP
                             </th>
-                            <th class="border-0 bg-light-subtle">
+                            <th class="border-0 bg-light-subtle" data-bs-toggle="tooltip" title="Log severity level (INFO, WARNING, ERROR)">
                                 <i class="fas fa-tag me-2"></i>Log Type
                             </th>
-                            <th class="border-0 bg-light-subtle">
+                            <th class="border-0 bg-light-subtle" data-bs-toggle="tooltip" title="Log source system (Apache, Linux, OpenSSH)">
                                 <i class="fas fa-source me-2"></i>Source
                             </th>
-                            <th class="border-0 bg-light-subtle">
+                            <th class="border-0 bg-light-subtle" data-bs-toggle="tooltip" title="Log message content">
                                 <i class="fas fa-comment me-2"></i>Message
                             </th>
-                            <th class="border-0 bg-light-subtle text-center">
+                            <th class="border-0 bg-light-subtle text-center" data-bs-toggle="tooltip" title="Available actions for this log entry">
                                 <i class="fas fa-cogs me-2"></i>Actions
                             </th>
                         </tr>
@@ -511,12 +511,11 @@
 {% block extra_js %}
 <script>
 function viewLogDetails(logId) {
-    // This function would typically make an AJAX call to get log details
-    // For now, we'll show a placeholder
+    // Show loading state
     document.getElementById('logDetailsContent').innerHTML = `
-        <div class="text-center">
+        <div class="text-center py-4">
             <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-            <p class="mt-2">Loading log details...</p>
+            <p class="mt-3 text-muted">Loading log details...</p>
         </div>
     `;
     
@@ -524,25 +523,126 @@ function viewLogDetails(logId) {
     var modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
     modal.show();
     
-    // In a real implementation, you would make an AJAX call here:
-    // fetch(`/dashboard/api/log/${logId}/`)
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         document.getElementById('logDetailsContent').innerHTML = `
-    //             <dl class="row">
-    //                 <dt class="col-sm-3">Timestamp:</dt>
-    //                 <dd class="col-sm-9">${data.timestamp}</dd>
-    //                 <dt class="col-sm-3">Host/IP:</dt>
-    //                 <dd class="col-sm-9">${data.host_ip}</dd>
-    //                 <dt class="col-sm-3">Log Type:</dt>
-    //                 <dd class="col-sm-9">${data.log_type}</dd>
-    //                 <dt class="col-sm-3">Source:</dt>
-    //                 <dd class="col-sm-9">${data.source}</dd>
-    //                 <dt class="col-sm-3">Message:</dt>
-    //                 <dd class="col-sm-9">${data.log_message}</dd>
-    //             </dl>
-    //         `;
-    //     });
+    // Fetch log details from API
+    fetch(`/dashboard/api/log/${logId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const log = data.log;
+                const anomalies = data.anomalies;
+                
+                // Build anomalies section
+                let anomaliesHtml = '';
+                if (anomalies.length > 0) {
+                    anomaliesHtml = `
+                        <div class="alert alert-warning mb-4" style="border-left: 4px solid #ffc107;">
+                            <h6 class="mb-2"><i class="fas fa-exclamation-triangle me-2"></i>Anomalies Detected</h6>
+                            ${anomalies.map(a => `
+                                <div class="mt-2 pt-2 border-top">
+                                    <strong>Score:</strong> ${a.score.toFixed(4)} 
+                                    <span class="text-muted">(Threshold: ${a.threshold})</span>
+                                    ${a.acknowledged ? '<span class="badge bg-success ms-2">Acknowledged</span>' : ''}
+                                    <br>
+                                    <small class="text-muted">Detected at: ${a.detected_at}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    anomaliesHtml = `
+                        <div class="alert alert-success mb-4" style="border-left: 4px solid #198754;">
+                            <i class="fas fa-check-circle me-2"></i>No anomalies detected for this log entry
+                        </div>
+                    `;
+                }
+                
+                // Build the details view
+                document.getElementById('logDetailsContent').innerHTML = `
+                    ${anomaliesHtml}
+                    
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3 pb-2 border-bottom">
+                            <i class="fas fa-info-circle me-2"></i>Log Information
+                        </h6>
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3 text-muted">Log ID:</dt>
+                            <dd class="col-sm-9">${log.id}</dd>
+                            
+                            <dt class="col-sm-3 text-muted">Timestamp:</dt>
+                            <dd class="col-sm-9">${log.timestamp}</dd>
+                            
+                            <dt class="col-sm-3 text-muted">Host/IP:</dt>
+                            <dd class="col-sm-9">${log.host_ip}</dd>
+                            
+                            <dt class="col-sm-3 text-muted">Log Type:</dt>
+                            <dd class="col-sm-9">
+                                <span class="badge ${getLogTypeBadgeClass(log.log_type)}">
+                                    <i class="fas ${getLogTypeIcon(log.log_type)} me-1"></i>
+                                    ${log.log_type.toUpperCase()}
+                                </span>
+                            </dd>
+                            
+                            <dt class="col-sm-3 text-muted">Source:</dt>
+                            <dd class="col-sm-9">${log.source}</dd>
+                            
+                            <dt class="col-sm-3 text-muted">Created At:</dt>
+                            <dd class="col-sm-9">${log.created_at}</dd>
+                        </dl>
+                    </div>
+                    
+                    <div>
+                        <h6 class="text-primary mb-3 pb-2 border-bottom">
+                            <i class="fas fa-file-alt me-2"></i>Log Message
+                        </h6>
+                        <div class="p-3 bg-light border rounded" style="font-family: 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word;">
+${log.log_message}
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('logDetailsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error loading log details: ${data.error}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching log details:', error);
+            document.getElementById('logDetailsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Failed to load log details. Please try again.
+                </div>
+            `;
+        });
 }
+
+function getLogTypeBadgeClass(logType) {
+    const type = logType.toLowerCase();
+    if (type === 'error') return 'bg-danger';
+    if (type === 'warning') return 'bg-warning';
+    if (type === 'info') return 'bg-info';
+    if (type === 'debug') return 'bg-secondary';
+    return 'bg-secondary';
+}
+
+function getLogTypeIcon(logType) {
+    const type = logType.toLowerCase();
+    if (type === 'error') return 'fa-exclamation-circle';
+    if (type === 'warning') return 'fa-exclamation-triangle';
+    if (type === 'info') return 'fa-info-circle';
+    if (type === 'debug') return 'fa-bug';
+    return 'fa-circle';
+}
+
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
 </script>
 {% endblock %} 

@@ -8,7 +8,7 @@
 <!-- Summary Cards with Modern Design -->
 <div class="row g-4 mb-5">
     <div class="col-xl-4 col-md-6">
-        <div class="stat-card stat-card-primary">
+        <div class="stat-card stat-card-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Total number of log entries processed by the system">
             <div class="stat-card-icon">
                 <i class="fas fa-file-alt"></i>
             </div>
@@ -27,7 +27,7 @@
     </div>
     
     <div class="col-xl-4 col-md-6">
-        <div class="stat-card stat-card-danger">
+        <div class="stat-card stat-card-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of log entries flagged as potential threats with anomaly score > threshold">
             <div class="stat-card-icon">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
@@ -46,7 +46,7 @@
     </div>
     
     <div class="col-xl-4 col-md-6">
-        <div class="stat-card stat-card-success">
+        <div class="stat-card {% if system_status.overall == 'healthy' or system_status.overall == 'running' %}stat-card-success{% elif system_status.overall == 'degraded' or system_status.overall == 'warning' %}stat-card-warning{% else %}stat-card-danger{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Overall system health including Kafka, database, and consumer status">
             <div class="stat-card-icon">
                 <i class="fas fa-server"></i>
             </div>
@@ -59,53 +59,24 @@
                     {{ system_status.overall|title }}
                 </div>
                 <div class="stat-footer">
-                    <span class="stat-badge stat-badge-success">
-                        <i class="fas fa-check-circle"></i> Operational
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
- 
-<!-- Pipeline Runner -->
-<div class="row mb-5">
-    <div class="col-12">
-        <div class="content-card pipeline-card">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="pipeline-icon">
-                            <i class="fas fa-play-circle"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-1 fw-bold">Run Demo Pipeline</h5>
-                            <p class="mb-0 text-muted small">Populate the database with sample data and run a quick performance analysis</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="align-self-start">
-                    <button id="run-pipeline-btn" class="btn btn-primary btn-lg">
-                        <i class="fas fa-rocket me-2"></i>
-                        Run Demo Pipeline
-                    </button>
-                </div>
-            </div>
-            <div class="mt-4 pipeline-output-section">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <div>
-                        <span class="badge bg-secondary" id="pipeline-status">
-                            <i class="fas fa-circle me-1"></i>
-                            Not started
+                    {% if system_status.overall == 'healthy' or system_status.overall == 'running' %}
+                        <span class="stat-badge stat-badge-success">
+                            <i class="fas fa-check-circle"></i> Operational
                         </span>
-                    </div>
+                    {% elif system_status.overall == 'degraded' or system_status.overall == 'warning' %}
+                        <span class="stat-badge stat-badge-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Degraded
+                        </span>
+                    {% else %}
+                        <span class="stat-badge stat-badge-danger">
+                            <i class="fas fa-times-circle"></i> Stopped
+                        </span>
+                    {% endif %}
                 </div>
-                <pre id="pipeline-output" class="pipeline-output">No output yet</pre>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Real-time Anomaly Feed -->
 <div class="row">
     <div class="col-12">
@@ -128,9 +99,9 @@
                     </button>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover modern-table">
-                    <thead>
+            <div class="table-responsive" style="max-height: 650px; overflow-y: auto;">
+                <table class="table table-hover modern-table mb-0">
+                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                         <tr>
                             <th><i class="fas fa-clock me-2"></i>Timestamp</th>
                             <th><i class="fas fa-server me-2"></i>Host/IP</th>
@@ -266,33 +237,58 @@ function updateAnomalyFeed(anomalies) {
         return;
     }
     
-    tbody.innerHTML = anomalies.map(anomaly => `
-        <tr>
-            <td>${new Date(anomaly.timestamp).toLocaleString()}</td>
-            <td><span class="badge bg-secondary">${anomaly.host_ip}</span></td>
-            <td>
-                <div class="text-truncate" style="max-width: 300px;" title="${anomaly.log_message}">
-                    ${anomaly.log_message}
-                </div>
-            </td>
-            <td>
-                <span class="badge ${anomaly.anomaly_score > 0.8 ? 'bg-danger' : anomaly.anomaly_score > 0.6 ? 'bg-warning' : 'bg-info'}">
-                    ${parseFloat(anomaly.anomaly_score).toFixed(3)}
-                </span>
-            </td>
-            <td><span class="badge bg-danger">Anomaly</span></td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = anomalies.map(anomaly => {
+        // Determine badge color based on confidence level
+        let statusBadge = 'bg-secondary';
+        if (anomaly.status === 'Critical') {
+            statusBadge = 'bg-danger';
+        } else if (anomaly.status === 'High Confidence') {
+            statusBadge = 'bg-warning text-dark';
+        } else if (anomaly.status === 'Medium Confidence') {
+            statusBadge = 'bg-info';
+        } else if (anomaly.status === 'Low Confidence') {
+            statusBadge = 'bg-secondary';
+        } else {
+            statusBadge = 'bg-light text-dark';
+        }
+        
+        return `
+            <tr>
+                <td>${anomaly.timestamp}</td>
+                <td><span class="badge bg-secondary">${anomaly.host_ip}</span></td>
+                <td>
+                    <div class="text-truncate" style="max-width: 300px;" title="${anomaly.log_message}">
+                        ${anomaly.log_message}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${anomaly.anomaly_score > 0.8 ? 'bg-danger' : anomaly.anomaly_score > 0.6 ? 'bg-warning' : 'bg-info'}">
+                        ${parseFloat(anomaly.anomaly_score).toFixed(3)}
+                    </span>
+                </td>
+                <td><span class="badge ${statusBadge}">${anomaly.status}</span></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function refreshFeed() {
     updateDashboard();
 }
 
-// Start real-time updates
+// Load dashboard data on page load and set up auto-refresh based on user preferences
 document.addEventListener('DOMContentLoaded', function() {
     updateDashboard();
-    updateInterval = setInterval(updateDashboard, 5000); // Update every 5 seconds
+    
+    // Apply user's refresh interval preference
+    const refreshInterval = {{ user_preferences.refresh_interval|default:0 }};
+    if (refreshInterval > 0) {
+        // Auto-refresh enabled based on user preferences
+        updateInterval = setInterval(updateDashboard, refreshInterval * 1000);
+        console.log(`Dashboard auto-refresh enabled: every ${refreshInterval} seconds`);
+    } else {
+        console.log('Dashboard auto-refresh disabled by user preference');
+    }
 });
 
 // Cleanup on page unload
@@ -378,11 +374,19 @@ async function pollPipelineStatus() {
         }
     };
 
-    // Poll immediately and then every 3 seconds
+    // Poll immediately and then every 10 seconds (reduced frequency for performance)
     update();
-    pipelinePollInterval = setInterval(update, 3000);
+    pipelinePollInterval = setInterval(update, 10000);
 }
 
 document.getElementById('run-pipeline-btn').addEventListener('click', startPipeline);
+
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
 </script>
 {% endblock %} 
