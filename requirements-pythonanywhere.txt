@@ -1,6 +1,6 @@
 # Minimal requirements for PythonAnywhere deployment
-# This excludes heavy packages like PyTorch, Transformers, FastAPI, etc.
-# Those run on the local network, not on the remote monitoring platform
+# Optimized for free tier disk space limits
+# Heavy packages removed - charts rendered client-side with JavaScript
 
 # Core Django
 Django==5.2.5
@@ -18,31 +18,31 @@ django-cors-headers==4.3.1
 django-crispy-forms==2.4
 crispy-bootstrap5==2025.6
 
-# System monitoring
+# Environment variables
+python-dotenv==1.0.1
+
+# System monitoring (required for monitoring page)
 psutil==7.0.0
 
-# Data handling (lightweight)
-numpy==2.3.2
-pandas==2.3.1
-python-dateutil==2.9.0.post0
+# REMOVED - Not used in webplatform codebase:
+# ❌ numpy (2.3.2) - not imported anywhere (~30MB saved)
+# ❌ pandas (2.3.1) - not imported anywhere (~50MB saved)
+# ❌ matplotlib (3.10.5) - not imported, charts use JavaScript (~50MB saved)
+# ❌ seaborn (0.13.2) - not imported anywhere (~10MB saved)
+# ❌ plotly (5.24.1) - not imported, charts use JavaScript (~30MB saved)
+# ❌ requests (2.32.4) - only used in test scripts, not webplatform
+# ❌ pytest (8.3.4) - only for development/testing
+# ❌ PyYAML (6.0.2) - not imported anywhere
+# ❌ python-dateutil - not directly imported
 
-# Visualization (for dashboard charts)
-matplotlib==3.10.5
-seaborn==0.13.2
-plotly==5.24.1
+# Total savings: ~170MB - fits easily in PythonAnywhere free tier!
 
-# API client for testing
-requests==2.32.4
+# Note: Charts are rendered client-side using Chart.js/JavaScript (via CDN)
+# No Python visualization libraries needed on the server
 
-# Testing
-pytest==8.3.4
-
-# Utilities
-PyYAML==6.0.2
-
-# Note: The following are NOT included (run on local network):
+# The following run on LOCAL network only (not on PythonAnywhere):
 # - torch (800MB+) - model inference runs locally
-# - transformers - not needed on remote platform
-# - kafka-python - not used in API architecture
-# - channels/redis - not needed for REST API
-# - fastapi/uvicorn - using Django REST Framework
+# - transformers - LogBERT model runs locally
+# - kafka-python - Kafka consumer runs locally
+# - channels/redis - not needed for REST API architecture
+# - fastapi/uvicorn - using Django REST Framework instead
