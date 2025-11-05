@@ -198,6 +198,7 @@
 let updateInterval;
 
 function updateDashboard() {
+    console.log('[Auto-refresh] Fetching dashboard data...');
     fetch('{% url "dashboard:api_dashboard_data" %}', {
         method: 'GET',
         credentials: 'same-origin',
@@ -207,12 +208,15 @@ function updateDashboard() {
         }
     })
         .then(response => {
+            console.log('[Auto-refresh] Response status:', response.status);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             return response.json();
         })
         .then(data => {
+            console.log('[Auto-refresh] Data received:', data.total_logs, 'logs,', data.total_anomalies, 'anomalies');
+            
             // Update connection status to connected
             document.getElementById('connection-status').className = 'badge badge-success-pulse';
             document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-1"></i>Connected';
@@ -232,7 +236,7 @@ function updateDashboard() {
             updateAnomalyFeed(data.recent_anomalies);
         })
         .catch(error => {
-            console.error('Error updating dashboard:', error);
+            console.error('[Auto-refresh] Error:', error.message, error);
             document.getElementById('connection-status').className = 'badge bg-danger';
             document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-1"></i>Disconnected';
         });
