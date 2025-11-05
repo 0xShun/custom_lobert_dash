@@ -86,6 +86,19 @@ def dashboard_overview(request):
 
 
 @login_required
+def anomaly_feed_partial(request):
+    """Return just the anomaly feed table rows as HTML"""
+    # Get recent anomalies (same as dashboard_overview)
+    recent_anomalies_data = get_cached_recent_anomalies(limit=50)
+    
+    context = {
+        'recent_anomalies': recent_anomalies_data,
+    }
+    
+    return render(request, 'dashboard/partials/anomaly_feed_rows.html', context)
+
+
+@login_required
 def log_details(request):
     """Log details page with optimized search and filtering"""
     # Get user preferences for items per page

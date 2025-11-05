@@ -196,14 +196,14 @@
 <script>
 // Real-time updates
 let updateInterval;
+let previousAnomalyCount = 0;
 
 function updateDashboard() {
-    console.log('[Auto-refresh] Fetching dashboard data...');
-    fetch('{% url "dashboard:api_dashboard_data" %}', {
+    console.log('[Auto-refresh] Fetching anomaly feed...');
+    fetch('{% url "dashboard:anomaly_feed_partial" %}', {
         method: 'GET',
         credentials: 'same-origin',
         headers: {
-            'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
@@ -212,111 +212,53 @@ function updateDashboard() {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            return response.json();
+            return response.text();
         })
-        .then(data => {
-            console.log('[Auto-refresh] Data received:', data.total_logs, 'logs,', data.total_anomalies, 'anomalies');
+        .then(html => {
+            console.log('[Auto-refresh] HTML received, updating feed...');
             
             // Update connection status to connected
             document.getElementById('connection-status').className = 'badge badge-success-pulse';
             document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-1"></i>Connected';
             
-            // Update stats
-            document.getElementById('total-logs').textContent = data.total_logs;
-            document.getElementById('total-anomalies').textContent = data.total_anomalies;
+            // Get current tbody
+            const tbody = document.getElementById('anomaly-feed');
             
-            // Update system status
-            const statusElement = document.getElementById('system-status');
-            statusElement.innerHTML = `
-                <span class="status-indicator status-${data.system_status.overall}"></span>
-                ${data.system_status.overall.charAt(0).toUpperCase() + data.system_status.overall.slice(1)}
-            `;
+            // Count rows before update (excluding empty state)
+            const currentRows = tbody.querySelectorAll('tr.anomaly-row');
+            const currentCount = currentRows.length;
             
-            // Update anomaly feed
-            updateAnomalyFeed(data.recent_anomalies);
+            // Update the table body
+            tbody.innerHTML = html;
+            
+            // Count rows after update
+            const newRows = tbody.querySelectorAll('tr.anomaly-row');
+            const newCount = newRows.length;
+            
+            // Highlight new rows if count increased
+            if (newCount > previousAnomalyCount && previousAnomalyCount > 0) {
+                console.log(`[Auto-refresh] New anomalies detected: ${newCount - previousAnomalyCount}`);
+                // Add highlight class to new rows (first N rows)
+                const numNewRows = newCount - previousAnomalyCount;
+                for (let i = 0; i < numNewRows && i < newRows.length; i++) {
+                    newRows[i].classList.add('anomaly-row-new');
+                }
+                
+                // Remove highlight after 2 seconds
+                setTimeout(() => {
+                    document.querySelectorAll('.anomaly-row-new').forEach(row => {
+                        row.classList.remove('anomaly-row-new');
+                    });
+                }, 2000);
+            }
+            
+            previousAnomalyCount = newCount;
         })
         .catch(error => {
             console.error('[Auto-refresh] Error:', error.message, error);
             document.getElementById('connection-status').className = 'badge bg-danger';
             document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-1"></i>Disconnected';
         });
-}
-
-// Track previous anomaly IDs to detect new ones
-let previousAnomalyIds = new Set();
-
-function updateAnomalyFeed(anomalies) {
-    const tbody = document.getElementById('anomaly-feed');
-    
-    if (anomalies.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="empty-state">
-                    <div class="empty-state-content">
-                        <i class="fas fa-inbox"></i>
-                        <h5>No anomalies detected yet</h5>
-                        <p class="text-muted mb-0">The system is monitoring for anomalies</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    // Get current anomaly IDs
-    const currentAnomalyIds = new Set(anomalies.map(a => a.id || a.timestamp));
-    
-    // Find new anomalies
-    const newAnomalyIds = [...currentAnomalyIds].filter(id => !previousAnomalyIds.has(id));
-    
-    tbody.innerHTML = anomalies.map(anomaly => {
-        const isNew = newAnomalyIds.includes(anomaly.id || anomaly.timestamp);
-        const newClass = isNew ? 'anomaly-row-new' : '';
-        
-        // Determine badge color based on confidence level
-        let statusBadge = 'bg-secondary';
-        if (anomaly.status === 'Critical') {
-            statusBadge = 'bg-danger';
-        } else if (anomaly.status === 'High Confidence') {
-            statusBadge = 'bg-warning text-dark';
-        } else if (anomaly.status === 'Medium Confidence') {
-            statusBadge = 'bg-info';
-        } else if (anomaly.status === 'Low Confidence') {
-            statusBadge = 'bg-secondary';
-        } else {
-            statusBadge = 'bg-light text-dark';
-        }
-        
-        return `
-            <tr class="anomaly-row ${newClass}">
-                <td class="timestamp-cell">${anomaly.timestamp}</td>
-                <td><span class="host-badge">${anomaly.host_ip}</span></td>
-                <td>
-                    <div class="log-message" title="${anomaly.log_message}">
-                        ${anomaly.log_message}
-                    </div>
-                </td>
-                <td>
-                    <span class="score-badge score-${anomaly.anomaly_score > 0.8 ? 'high' : anomaly.anomaly_score > 0.6 ? 'medium' : 'low'}">
-                        ${parseFloat(anomaly.anomaly_score).toFixed(3)}
-                    </span>
-                </td>
-                <td><span class="status-badge status-anomaly">${anomaly.status || 'Anomaly'}</span></td>
-            </tr>
-        `;
-    }).join('');
-    
-    // Update tracking set
-    previousAnomalyIds = currentAnomalyIds;
-    
-    // Remove highlight animation after 2 seconds
-    if (newAnomalyIds.length > 0) {
-        setTimeout(() => {
-            document.querySelectorAll('.anomaly-row-new').forEach(row => {
-                row.classList.remove('anomaly-row-new');
-            });
-        }, 2000);
-    }
 }
 
 function refreshFeed() {
