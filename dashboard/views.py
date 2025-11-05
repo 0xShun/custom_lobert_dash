@@ -192,22 +192,40 @@ def api_dashboard_data(request):
     
     # Get system status from API model (updated by local network)
     from api.models import LocalSystemStatus
-    system_status_obj = LocalSystemStatus.get_latest()
-    system_status = {
-        'overall': system_status_obj.overall_status,
-        'kafka': {
-            'status': system_status_obj.kafka_status,
-            'details': system_status_obj.kafka_details
-        },
-        'zookeeper': {
-            'status': system_status_obj.zookeeper_status,
-            'details': system_status_obj.zookeeper_details
-        },
-        'consumer': {
-            'status': system_status_obj.consumer_status,
-            'details': system_status_obj.consumer_details
-        },
-    }
+    try:
+        system_status_obj = LocalSystemStatus.get_latest()
+        system_status = {
+            'overall': system_status_obj.overall_status,
+            'kafka': {
+                'status': system_status_obj.kafka_status,
+                'details': system_status_obj.kafka_details
+            },
+            'zookeeper': {
+                'status': system_status_obj.zookeeper_status,
+                'details': system_status_obj.zookeeper_details
+            },
+            'consumer': {
+                'status': system_status_obj.consumer_status,
+                'details': system_status_obj.consumer_details
+            },
+        }
+    except Exception as e:
+        # If no status available, return default values
+        system_status = {
+            'overall': 'not_applicable',
+            'kafka': {
+                'status': 'unknown',
+                'details': 'No status data available'
+            },
+            'zookeeper': {
+                'status': 'unknown',
+                'details': 'No status data available'
+            },
+            'consumer': {
+                'status': 'unknown',
+                'details': 'No status data available'
+            },
+        }
     
     return JsonResponse({
         'total_logs': total_logs,
