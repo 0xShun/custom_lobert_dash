@@ -311,39 +311,40 @@
                     <table class="table table-bordered mt-3">
                         <thead class="table-dark">
                             <tr>
-                                <th width="20%">Score</th>
+                                <th width="20%">Score Range</th>
                                 <th width="20%">Badge Color</th>
-                                <th width="30%">Meaning</th>
-                                <th width="30%">Action</th>
+                                <th width="30%">Severity Level</th>
+                                <th width="30%">Recommended Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="table-success">
-                                <td><strong>0.0 - 0.5</strong></td>
-                                <td><span class="badge bg-success">NORMAL</span></td>
-                                <td>Regular system activity</td>
-                                <td>No action required</td>
+                            <tr style="background-color: #e7f6f8;">
+                                <td><strong>0.0 - 0.6</strong></td>
+                                <td><span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">CYAN</span></td>
+                                <td>Low Risk - Slightly unusual activity</td>
+                                <td>Monitor - No immediate action needed</td>
                             </tr>
-                            <tr class="table-warning">
-                                <td><strong>0.5 - 0.7</strong></td>
-                                <td><span class="badge bg-warning">SUSPICIOUS</span></td>
-                                <td>Unusual but may be benign</td>
-                                <td>Review if time permits</td>
+                            <tr style="background-color: #fff8e1;">
+                                <td><strong>0.6 - 0.8</strong></td>
+                                <td><span class="badge" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #333;">YELLOW</span></td>
+                                <td>Medium Risk - Suspicious pattern detected</td>
+                                <td>Review when possible - May require investigation</td>
                             </tr>
-                            <tr class="table-danger">
-                                <td><strong>0.7 - 0.85</strong></td>
-                                <td><span class="badge bg-danger">HIGH</span></td>
-                                <td>Likely security incident</td>
-                                <td><strong>Investigate immediately</strong></td>
-                            </tr>
-                            <tr style="background-color: #2c0000; color: white;">
-                                <td><strong>0.85 - 1.0</strong></td>
-                                <td><span class="badge bg-dark">CRITICAL</span></td>
-                                <td>Active attack detected</td>
-                                <td><strong>URGENT: Block & respond</strong></td>
+                            <tr style="background-color: #ffebee;">
+                                <td><strong>0.8 - 1.0</strong></td>
+                                <td><span class="badge" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">RED</span></td>
+                                <td>High Risk - Strong anomaly indicator</td>
+                                <td><strong>Investigate immediately</strong> - Potential security incident</td>
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> <strong>Color Guide:</strong> 
+                        <span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">Cyan</span> = Low Risk (0.0-0.6) | 
+                        <span class="badge" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #333;">Yellow</span> = Medium Risk (0.6-0.8) | 
+                        <span class="badge" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">Red</span> = High Risk (0.8-1.0)
+                    </div>
 
                     <h5 class="mt-4">What the AI Looks For</h5>
                     <div class="row">
